@@ -37,11 +37,12 @@ var apiScope = InfisicalClientScope{
 }
 
 type TestCases struct {
-	Name           string
-	MockClient     *fake.MockInfisicalClient
-	PropertyAccess string
-	Error          error
-	Output         any
+	Name       string
+	MockClient *fake.MockInfisicalClient
+	Key        string
+	Property   string
+	Error      error
+	Output     any
 }
 
 func TestGetSecret(t *testing.T) {
@@ -53,6 +54,7 @@ func TestGetSecret(t *testing.T) {
 					return "value", nil
 				},
 			},
+			Key:    "key",
 			Error:  nil,
 			Output: []byte("value"),
 		},
@@ -63,8 +65,10 @@ func TestGetSecret(t *testing.T) {
 					return `{"key":"value"}`, nil
 				},
 			},
-			Error:  nil,
-			Output: []byte("value"),
+			Key:      "key",
+			Property: "key",
+			Error:    nil,
+			Output:   []byte("value"),
 		},
 		{
 			Name: "Key_not_found",
@@ -74,8 +78,23 @@ func TestGetSecret(t *testing.T) {
 					return "", errors.New("Secret not found")
 				},
 			},
+			Key:    "key",
 			Error:  errors.New("Secret not found"),
 			Output: "",
+		},
+		{
+			Name: "Key_with_slash",
+			MockClient: &fake.MockInfisicalClient{
+				MockedGetSecretByKeyV3: func(data api.GetSecretByKeyV3Request) (string, error) {
+					if data.SecretPath == "/foo" && data.SecretKey == "bar" {
+						return "value", nil
+					}
+					return "", errors.New("Secret not found")
+				},
+			},
+			Key:    "foo/bar",
+			Error:  nil,
+			Output: []byte("value"),
 		},
 	}
 
@@ -85,14 +104,10 @@ func TestGetSecret(t *testing.T) {
 				apiClient: tc.MockClient,
 				apiScope:  &apiScope,
 			}
-			var property string
-			if tc.Name == "Get_property_key" {
-				property = "key"
-			}
 
 			output, err := p.GetSecret(context.Background(), esv1beta1.ExternalSecretDataRemoteRef{
-				Key:      "key",
-				Property: property,
+				Key:      tc.Key,
+				Property: tc.Property,
 			})
 
 			if tc.Error == nil {
@@ -114,6 +129,7 @@ func TestGetSecretMap(t *testing.T) {
 					return `{"key":"value"}`, nil
 				},
 			},
+			Key:   "key",
 			Error: nil,
 			Output: map[string][]byte{
 				"key": []byte("value"),
@@ -126,6 +142,7 @@ func TestGetSecretMap(t *testing.T) {
 					return ``, nil
 				},
 			},
+			Key:    "key",
 			Error:  errors.New("unexpected end of JSON input"),
 			Output: nil,
 		},
@@ -138,7 +155,8 @@ func TestGetSecretMap(t *testing.T) {
 				apiScope:  &apiScope,
 			}
 			output, err := p.GetSecretMap(context.Background(), esv1beta1.ExternalSecretDataRemoteRef{
-				Key: "key",
+				Key:      tc.Key,
+				Property: tc.Property,
 			})
 			if tc.Error == nil {
 				assert.NoError(t, err)
@@ -235,4 +253,22 @@ func TestValidateStore(t *testing.T) {
 		_, err := p.ValidateStore(tc.store)
 		tc.assertError(t, err)
 	}
+}
+
+func TestGetSecretAddress(t *testing.T) {
+	path, key := getSecretAddress("/", "foo")
+	assert.Equal(t, path, "/")
+	assert.Equal(t, key, "foo")
+
+	path, key = getSecretAddress("/", "foo/bar")
+	assert.Equal(t, path, "/foo")
+	assert.Equal(t, key, "bar")
+
+	path, key = getSecretAddress("/", "foo/bar/baz")
+	assert.Equal(t, path, "/foo/bar")
+	assert.Equal(t, key, "baz")
+
+	path, key = getSecretAddress("/foo", "bar/baz")
+	assert.Equal(t, path, "/foo/bar")
+	assert.Equal(t, key, "baz")
 }

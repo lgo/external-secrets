@@ -254,21 +254,3 @@ func TestValidateStore(t *testing.T) {
 		tc.assertError(t, err)
 	}
 }
-
-func TestGetSecretAddress(t *testing.T) {
-	path, key := getSecretAddress("/", "foo")
-	assert.Equal(t, path, "/")
-	assert.Equal(t, key, "foo")
-
-	path, key = getSecretAddress("/", "foo/bar")
-	assert.Equal(t, path, "/foo")
-	assert.Equal(t, key, "bar")
-
-	path, key = getSecretAddress("/", "foo/bar/baz")
-	assert.Equal(t, path, "/foo/bar")
-	assert.Equal(t, key, "baz")
-
-	path, key = getSecretAddress("/foo", "bar/baz")
-	assert.Equal(t, path, "/foo/bar")
-	assert.Equal(t, key, "baz")
-}

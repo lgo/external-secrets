@@ -17,7 +17,7 @@ all: $(addprefix build-,$(ARCH))
 
 # Image registry for build/push image targets
 export IMAGE_REGISTRY ?= ghcr.io
-export IMAGE_REPO     ?= external-secrets/external-secrets
+export IMAGE_REPO     ?= lgo/external-secrets
 export IMAGE_NAME ?= $(IMAGE_REGISTRY)/$(IMAGE_REPO)
 
 BUNDLE_DIR     ?= deploy/crds
@@ -238,14 +238,14 @@ docker.tag:  ## Emit IMAGE_TAG
 .PHONY: docker.build
 docker.build: $(addprefix build-,$(ARCH)) ## Build the docker image
 	@$(INFO) docker build
-	echo docker build -f $(DOCKERFILE) . $(DOCKER_BUILD_ARGS) -t $(IMAGE_NAME):$(IMAGE_TAG)
-	DOCKER_BUILDKIT=1 docker build -f $(DOCKERFILE) . $(DOCKER_BUILD_ARGS) -t $(IMAGE_NAME):$(IMAGE_TAG)
+	echo docker build -f $(DOCKERFILE) . $(DOCKER_BUILD_ARGS) -t $(IMAGE_NAME):$(IMAGE_TAG)-infisical-fixes-v0
+	DOCKER_BUILDKIT=1 docker build -f $(DOCKERFILE) . $(DOCKER_BUILD_ARGS) -t $(IMAGE_NAME):$(IMAGE_TAG)-infisical-fixes-v0
 	@$(OK) docker build
 
 .PHONY: docker.push
 docker.push: ## Push the docker image to the registry
 	@$(INFO) docker push
-	@docker push $(IMAGE_NAME):$(IMAGE_TAG)
+	@docker push $(IMAGE_NAME):$(IMAGE_TAG)-infisical-fixes-v0
 	@$(OK) docker push
 
 # RELEASE_TAG is tag to promote. Default is promoting to main branch, but can be overriden

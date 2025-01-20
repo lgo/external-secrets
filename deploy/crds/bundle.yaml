@@ -4453,6 +4453,9 @@ spec:
                           type: string
                         secretsScope:
                           properties:
+                            defaultSecretPath:
+                              default: /
+                              type: string
                             environmentSlug:
                               type: string
                             projectSlug:
@@ -4460,9 +4463,6 @@ spec:
                             recursive:
                               default: false
                               type: boolean
-                            defaultSecretPath:
-                              default: /
-                              type: string
                           required:
                             - environmentSlug
                             - projectSlug
@@ -11573,6 +11573,9 @@ spec:
                           type: string
                         secretsScope:
                           properties:
+                            defaultSecretPath:
+                              default: /
+                              type: string
                             environmentSlug:
                               type: string
                             projectSlug:
@@ -11580,9 +11583,6 @@ spec:
                             recursive:
                               default: false
                               type: boolean
-                            defaultSecretsPath:
-                              default: /
-                              type: string
                           required:
                             - environmentSlug
                             - projectSlug

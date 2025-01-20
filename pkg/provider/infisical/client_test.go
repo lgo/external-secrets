@@ -57,6 +57,6 @@ func TestGetSecretAddress(t *testing.T) {
 	t.Run("fails when the key is a folder but does not begin with a slash", func(t *testing.T) {
 		_, _, err := getSecretAddress("/", "bar/baz")
 		assert.Error(t, err)
-		assert.Equal(t, err.Error(), "a secret key referencing a folder must start with a `/` as it is an absolute path, key: bar/baz")
+		assert.Equal(t, err.Error(), "a secret key referencing a folder must start with a '/' as it is an absolute path, key: bar/baz")
 	})
 }

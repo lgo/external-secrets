@@ -75,11 +75,11 @@ func TestGetSecret(t *testing.T) {
 			MockClient: &fake.MockInfisicalClient{
 				MockedGetSecretByKeyV3: func(data api.GetSecretByKeyV3Request) (string, error) {
 					// from server
-					return "", errors.New("Secret not found")
+					return "", esv1beta1.NoSecretErr
 				},
 			},
 			Key:    "key",
-			Error:  errors.New("Secret not found"),
+			Error:  esv1beta1.NoSecretErr,
 			Output: "",
 		},
 		{
@@ -89,7 +89,7 @@ func TestGetSecret(t *testing.T) {
 					if data.SecretPath == "/foo" && data.SecretKey == "bar" {
 						return "value", nil
 					}
-					return "", errors.New("Secret not found")
+					return "", esv1beta1.NoSecretErr
 				},
 			},
 			Key:    "/foo/bar",

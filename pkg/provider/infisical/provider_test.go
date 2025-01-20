@@ -214,6 +214,7 @@ func withClientSecret(name, key string, namespace *string) storeModifier {
 }
 
 type ValidateStoreTestCase struct {
+	name        string
 	store       *esv1beta1.SecretStore
 	assertError func(t *testing.T, err error)
 }
@@ -226,31 +227,37 @@ func TestValidateStore(t *testing.T) {
 
 	testCases := []ValidateStoreTestCase{
 		{
+			name:  "Missing projectSlug",
 			store: makeSecretStore("", "", ""),
 			assertError: func(t *testing.T, err error) {
 				require.ErrorAs(t, err, &authScopeMissingErr)
 			},
 		},
 		{
+			name:  "Missing clientID",
 			store: makeSecretStore(apiScope.ProjectSlug, apiScope.EnvironmentSlug, apiScope.SecretPath, withClientID(authType, randomID, nil)),
 			assertError: func(t *testing.T, err error) {
 				require.ErrorAs(t, err, &authCredMissingErr)
 			},
 		},
 		{
+			name:  "Missing clientSecret",
 			store: makeSecretStore(apiScope.ProjectSlug, apiScope.EnvironmentSlug, apiScope.SecretPath, withClientSecret(authType, randomID, nil)),
 			assertError: func(t *testing.T, err error) {
 				require.ErrorAs(t, err, &authCredMissingErr)
 			},
 		},
 		{
+			name:        "Success",
 			store:       makeSecretStore(apiScope.ProjectSlug, apiScope.EnvironmentSlug, apiScope.SecretPath, withClientID(authType, randomID, nil), withClientSecret(authType, randomID, nil)),
 			assertError: func(t *testing.T, err error) { require.NoError(t, err) },
 		},
 	}
 	p := Provider{}
 	for _, tc := range testCases {
-		_, err := p.ValidateStore(tc.store)
-		tc.assertError(t, err)
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := p.ValidateStore(tc.store)
+			tc.assertError(t, err)
+		})
 	}
 }

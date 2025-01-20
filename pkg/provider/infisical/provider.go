@@ -91,7 +91,6 @@ func (p *Provider) NewClient(ctx context.Context, store esv1beta1.GenericStore, 
 			return nil, fmt.Errorf("failed to authenticate via universal auth %w", err)
 		}
 
-		// TODO(lgo): Do we need to handle this, or does the API just work with an empty `secretPath`?
 		secretPath := infisicalSpec.SecretsScope.SecretsPath
 		if secretPath == "" {
 			secretPath = "/"

@@ -94,7 +94,7 @@ func TestGetSecret(t *testing.T) {
 					SecretValue: "value",
 				},
 			},
-			Key:    "foo/bar",
+			Key:    "/foo/bar",
 			Output: []byte("value"),
 		},
 	}

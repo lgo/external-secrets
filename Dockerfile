@@ -6,4 +6,6 @@ COPY bin/external-secrets-${TARGETOS}-${TARGETARCH} /bin/external-secrets
 # Run as UID for nobody
 USER 65534
 
+LABEL org.opencontainers.image.description "Build including Infisical fixes from https://github.com/lgo/external-secrets/tree/joey-infisical-folder-handling-testing"
+
 ENTRYPOINT ["/bin/external-secrets"]

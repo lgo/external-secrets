@@ -3738,7 +3738,7 @@ should match snapshot of default values:
                                 recursive:
                                   default: false
                                   type: boolean
-                                secretsPath:
+                                defaultSecretPath:
                                   default: /
                                   type: string
                               required:

@@ -5260,7 +5260,7 @@ CAProvider
 <tbody>
 <tr>
 <td>
-<code>secretsPath</code></br>
+<code>defaultSecretPath</code></br>
 <em>
 string
 </em>

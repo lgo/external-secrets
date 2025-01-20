@@ -4460,7 +4460,7 @@ spec:
                             recursive:
                               default: false
                               type: boolean
-                            secretsPath:
+                            defaultSecretPath:
                               default: /
                               type: string
                           required:
@@ -11580,7 +11580,7 @@ spec:
                             recursive:
                               default: false
                               type: boolean
-                            secretsPath:
+                            defaultSecretsPath:
                               default: /
                               type: string
                           required:

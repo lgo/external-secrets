@@ -96,7 +96,7 @@ func (p *Provider) NewClient(ctx context.Context, store esv1beta1.GenericStore, 
 		}
 
 		// TODO(lgo): Do we need to handle this, or does the API just work with an empty `secretPath`?
-		secretPath := infisicalSpec.SecretsScope.SecretsPath
+		secretPath := infisicalSpec.SecretsScope.DefaultSecretPath
 		if secretPath == "" {
 			secretPath = "/"
 		}

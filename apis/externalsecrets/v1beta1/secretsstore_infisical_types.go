@@ -33,7 +33,7 @@ type InfisicalAuth struct {
 type MachineIdentityScopeInWorkspace struct {
 	// +kubebuilder:default="/"
 	// +optional
-	SecretsPath string `json:"secretsPath,omitempty"`
+	DefaultSecretPath string `json:"defaultSecretPath,omitempty"`
 	// +kubebuilder:default=false
 	// +optional
 	Recursive bool `json:"recursive,omitempty"`

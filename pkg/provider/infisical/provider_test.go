@@ -171,7 +171,7 @@ func TestGetSecretMap(t *testing.T) {
 	}
 }
 
-func makeSecretStore(projectSlug, environment, secretPath string, fn ...storeModifier) *esv1beta1.SecretStore {
+func makeSecretStore(projectSlug, environment, defaultSecretPath string, fn ...storeModifier) *esv1beta1.SecretStore {
 	store := &esv1beta1.SecretStore{
 		Spec: esv1beta1.SecretStoreSpec{
 			Provider: &esv1beta1.SecretStoreProvider{
@@ -180,9 +180,9 @@ func makeSecretStore(projectSlug, environment, secretPath string, fn ...storeMod
 						UniversalAuthCredentials: &esv1beta1.UniversalAuthCredentials{},
 					},
 					SecretsScope: esv1beta1.MachineIdentityScopeInWorkspace{
-						SecretsPath:     secretPath,
-						EnvironmentSlug: environment,
-						ProjectSlug:     projectSlug,
+						DefaultSecretPath: defaultSecretPath,
+						EnvironmentSlug:   environment,
+						ProjectSlug:       projectSlug,
 					},
 				},
 			},

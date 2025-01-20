@@ -57,7 +57,7 @@ func getSecretAddress(defaultPath, key string) (string, string, error) {
 
 	// Check if `key` starts with a `/`, and throw and error if it does not.
 	if !strings.HasPrefix(key, "/") {
-		return "", "", fmt.Errorf("a secret key referencing a folder must start with a `/` as it is an absolute path, key: %s", key)
+		return "", "", fmt.Errorf("a secret key referencing a folder must start with a '/' as it is an absolute path, key: %s", key)
 	}
 
 	// Otherwise, take the prefix from `key` and use that as the path. We intentionally discard

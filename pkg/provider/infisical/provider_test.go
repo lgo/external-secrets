@@ -92,8 +92,7 @@ func TestGetSecret(t *testing.T) {
 					return "", errors.New("Secret not found")
 				},
 			},
-			Key:    "foo/bar",
-			Error:  nil,
+			Key:    "/foo/bar",
 			Output: []byte("value"),
 		},
 	}

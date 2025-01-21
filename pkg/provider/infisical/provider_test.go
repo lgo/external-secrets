@@ -16,7 +16,11 @@ package infisical
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -124,6 +128,54 @@ func TestGetSecret(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestGetSecretWithPath verifies that request is translated from a key
+// `/foo/bar` to a secret `bar` with `secretPath` of `/foo`.
+func TestGetSecretWithPath(t *testing.T) {
+	requestedKey := "/foo/bar"
+	expectedSecretPath := "/foo"
+	expectedSecretKey := "bar"
+
+	// Prepare the mock response.
+	data := api.GetSecretByKeyV3Response{
+		Secret: api.SecretsV3{
+			SecretKey:   expectedSecretKey,
+			SecretValue: `value`,
+		},
+	}
+	body, err := json.Marshal(data)
+	if err != nil {
+		panic(err)
+	}
+
+	// Prepare the mock server, which asserts the request translation is correct.
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, fmt.Sprintf("/api/v3/secrets/raw/%s", expectedSecretKey), r.URL.Path)
+		assert.Equal(t, expectedSecretPath, r.URL.Query().Get("secretPath"))
+		w.WriteHeader(200)
+		_, err := w.Write(body)
+		if err != nil {
+			panic(err)
+		}
+	}))
+	defer server.Close()
+
+	client, err := api.NewAPIClient(server.URL, server.Client())
+	require.NoError(t, err)
+	p := &Provider{
+		apiClient: client,
+		apiScope:  &apiScope,
+	}
+
+	// Retrieve the secret.
+	output, err := p.GetSecret(context.Background(), esv1beta1.ExternalSecretDataRemoteRef{
+		Key:      requestedKey,
+		Property: "",
+	})
+	// And, we should get back the expected secret value.
+	require.NoError(t, err)
+	assert.Equal(t, []byte("value"), output)
 }
 
 func TestGetSecretMap(t *testing.T) {

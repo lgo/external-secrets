@@ -25,7 +25,6 @@ import (
 	esv1beta1 "github.com/external-secrets/external-secrets/apis/externalsecrets/v1beta1"
 	esv1meta "github.com/external-secrets/external-secrets/apis/meta/v1"
 	"github.com/external-secrets/external-secrets/pkg/provider/infisical/api"
-	"github.com/external-secrets/external-secrets/pkg/provider/infisical/fake"
 )
 
 type storeModifier func(*esv1beta1.SecretStore) *esv1beta1.SecretStore
@@ -37,59 +36,65 @@ var apiScope = InfisicalClientScope{
 }
 
 type TestCases struct {
-	Name       string
-	MockClient *fake.MockInfisicalClient
-	Key        string
-	Property   string
-	Error      error
-	Output     any
+	Name           string
+	MockStatusCode int
+	MockResponse   any
+	Key            string
+	Property       string
+	Error          error
+	Output         any
 }
 
 func TestGetSecret(t *testing.T) {
+	key := "foo"
+
 	testCases := []TestCases{
 		{
-			Name: "Get_valid_key",
-			MockClient: &fake.MockInfisicalClient{
-				MockedGetSecretByKeyV3: func(data api.GetSecretByKeyV3Request) (string, error) {
-					return "value", nil
+			Name:           "Get_valid_key",
+			MockStatusCode: 200,
+			MockResponse: api.GetSecretByKeyV3Response{
+				Secret: api.SecretsV3{
+					SecretKey:   key,
+					SecretValue: "bar",
 				},
 			},
-			Key:    "key",
+			Key:    key,
 			Error:  nil,
-			Output: []byte("value"),
+			Output: []byte("bar"),
 		},
 		{
-			Name: "Get_property_key",
-			MockClient: &fake.MockInfisicalClient{
-				MockedGetSecretByKeyV3: func(data api.GetSecretByKeyV3Request) (string, error) {
-					return `{"key":"value"}`, nil
+			Name:           "Get_property_key",
+			MockStatusCode: 200,
+			MockResponse: api.GetSecretByKeyV3Response{
+				Secret: api.SecretsV3{
+					SecretKey:   key,
+					SecretValue: `{"bar": "value"}`,
 				},
 			},
-			Key:      "key",
-			Property: "key",
+			Key:      key,
+			Property: "bar",
 			Error:    nil,
 			Output:   []byte("value"),
 		},
 		{
-			Name: "Key_not_found",
-			MockClient: &fake.MockInfisicalClient{
-				MockedGetSecretByKeyV3: func(data api.GetSecretByKeyV3Request) (string, error) {
-					// from server
-					return "", esv1beta1.NoSecretErr
-				},
+			Name:           "Key_not_found",
+			MockStatusCode: 404,
+			MockResponse: api.InfisicalAPIError{
+				StatusCode: 404,
+				Err:        "Not Found",
+				Message:    esv1beta1.NoSecretErr,
 			},
-			Key:    "key",
+			Key:    key,
 			Error:  esv1beta1.NoSecretErr,
 			Output: "",
 		},
 		{
-			Name: "Key_with_slash",
-			MockClient: &fake.MockInfisicalClient{
-				MockedGetSecretByKeyV3: func(data api.GetSecretByKeyV3Request) (string, error) {
-					if data.SecretPath == "/foo" && data.SecretKey == "bar" {
-						return "value", nil
-					}
-					return "", esv1beta1.NoSecretErr
+			Name:           "Key_with_slash",
+			MockStatusCode: 200,
+			MockResponse: api.GetSecretByKeyV3Response{
+				Secret: api.SecretsV3{
+					SecretKey:   "bar",
+					SecretValue: "value",
 				},
 			},
 			Key:    "/foo/bar",
@@ -99,8 +104,10 @@ func TestGetSecret(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
+			apiClient, closeFunc := api.NewMockClient(tc.MockStatusCode, tc.MockResponse)
+			defer closeFunc()
 			p := &Provider{
-				apiClient: tc.MockClient,
+				apiClient: apiClient,
 				apiScope:  &apiScope,
 			}
 
@@ -120,37 +127,38 @@ func TestGetSecret(t *testing.T) {
 }
 
 func TestGetSecretMap(t *testing.T) {
+	key := "foo"
 	testCases := []TestCases{
 		{
-			Name: "Get_valid_key_map",
-			MockClient: &fake.MockInfisicalClient{
-				MockedGetSecretByKeyV3: func(data api.GetSecretByKeyV3Request) (string, error) {
-					return `{"key":"value"}`, nil
+			Name:           "Get_valid_key_map",
+			MockStatusCode: 200,
+			MockResponse: api.GetSecretByKeyV3Response{
+				Secret: api.SecretsV3{
+					SecretKey:   key,
+					SecretValue: `{"bar": "value"}`,
 				},
 			},
-			Key:   "key",
-			Error: nil,
+			Key: "key",
 			Output: map[string][]byte{
-				"key": []byte("value"),
+				"bar": []byte("value"),
 			},
 		},
 		{
-			Name: "Get_invalid_map",
-			MockClient: &fake.MockInfisicalClient{
-				MockedGetSecretByKeyV3: func(data api.GetSecretByKeyV3Request) (string, error) {
-					return ``, nil
-				},
-			},
-			Key:    "key",
-			Error:  errors.New("unexpected end of JSON input"),
-			Output: nil,
+			Name:           "Get_invalid_map",
+			MockStatusCode: 200,
+			MockResponse:   []byte(``),
+			Key:            "key",
+			Error:          errors.New("unexpected end of JSON input"),
+			Output:         nil,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.Name, func(t *testing.T) {
+			apiClient, closeFunc := api.NewMockClient(tc.MockStatusCode, tc.MockResponse)
+			defer closeFunc()
 			p := &Provider{
-				apiClient: tc.MockClient,
+				apiClient: apiClient,
 				apiScope:  &apiScope,
 			}
 			output, err := p.GetSecretMap(context.Background(), esv1beta1.ExternalSecretDataRemoteRef{
